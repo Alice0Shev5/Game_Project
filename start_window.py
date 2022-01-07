@@ -46,6 +46,7 @@ def start_screen():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+            # при нажатии на любую клавишу клавитатуры или мыши - запустится фнкция main  и начнется игра
             if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                 return main()
         pygame.display.flip()
