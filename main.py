@@ -1,4 +1,3 @@
-import pygame
 from constans import *
 
 back = pygame.image.load('data/bg.jpg')
@@ -69,9 +68,9 @@ class Magician(pygame.sprite.Sprite):
             self.change_y += .95
 
         # если маг на земле, то устаноим позицию Y = 0
-        if self.rect.y >= SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
+        if self.rect.y >= screen_height - self.rect.height and self.change_y >= 0:
             self.change_y = 0
-            self.rect.y = SCREEN_HEIGHT - self.rect.height
+            self.rect.y = screen_height - self.rect.height
 
     def jump(self):
         # Обработка прыжка
@@ -83,7 +82,7 @@ class Magician(pygame.sprite.Sprite):
         self.rect.y -= 10
 
         # Если все в порядке, прыгаем вверх
-        if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
+        if len(platform_hit_list) > 0 or self.rect.bottom >= screen_height:
             self.change_y = -16
 
     # Передвижение игрока
@@ -120,17 +119,26 @@ class Platform(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
 
+# пока не готово
+class Fire(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load('data/fire.png')
+        self.rect = self.image.get_rect()
+
 
 # Класс для расстановки платформ на уровне
 class Level(object):
     def __init__(self, player):
         self.platform_list = pygame.sprite.Group()
+        self.fire = pygame.sprite.Group()
 
         self.player = player
 
     # обновление чтобы рисовались платформы
     def update(self):
         self.platform_list.update()
+        self.fire = pygame.sprite.Group()
 
     # функция для рисования объектов на уровне
     def draw(self, screen):
@@ -139,6 +147,7 @@ class Level(object):
 
         # Рисуем все платформы из группы спрайтов
         self.platform_list.draw(screen)
+        self.fire.draw(screen)
 
 
 # Класс, что описывает где будут находится все платформы
@@ -155,6 +164,7 @@ class Level_1(Level):
             [210, 32, 200, 400],
             [210, 32, 600, 300],
         ]
+        fires = [60, 60, 600, 500]
 
         # Перебираем массив и добавляем каждую платформу в группу спрайтов - platform_list
         for platform in level:
@@ -169,7 +179,7 @@ class Level_1(Level):
 def main():
     pygame.init()
 
-    size = [SCREEN_WIDTH, SCREEN_HEIGHT]
+    size = [screen_width, screen_height]
     screen = pygame.display.set_mode(size)
 
     pygame.display.set_caption("Magician")
@@ -189,7 +199,7 @@ def main():
     player.level = current_level
 
     player.rect.x = 340
-    player.rect.y = SCREEN_HEIGHT - player.rect.height
+    player.rect.y = screen_height - player.rect.height
     active_sprite_list.add(player)
 
     running = False
@@ -221,8 +231,8 @@ def main():
         current_level.update()
 
         # Если игрок приблизится к правой стороне, то дальше его не двигаем
-        if player.rect.right > SCREEN_WIDTH:
-            player.rect.right = SCREEN_WIDTH
+        if player.rect.right > screen_width:
+            player.rect.right = screen_width
 
         # Если игрок приблизится к левой стороне, то дальше его не двигаем
         if player.rect.left < 0:
