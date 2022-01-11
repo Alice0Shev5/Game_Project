@@ -34,6 +34,12 @@ class Magician(pygame.sprite.Sprite):
 
         # проверка на столкновение с платформами
         block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        block_hit_list1 = pygame.sprite.spritecollide(self,
+                                                      self.level.fire,
+                                                      False)
+        print(block_hit_list1)
+        # block_hit_list1 = pygame.sprite.spritecollide(self, self.fires.fire, False)
+
         # Перебираем все возможные объекты, с которыми могли бы столкнуться
         for block in block_hit_list:
             # Если мы идем направо,
@@ -119,11 +125,14 @@ class Platform(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
 
+
 # пока не готово
 class Fire(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, width, height):
         super().__init__()
+
         self.image = pygame.image.load('data/fire.png')
+
         self.rect = self.image.get_rect()
 
 
@@ -138,7 +147,7 @@ class Level(object):
     # обновление чтобы рисовались платформы
     def update(self):
         self.platform_list.update()
-        self.fire = pygame.sprite.Group()
+        self.fire.update()
 
     # функция для рисования объектов на уровне
     def draw(self, screen):
@@ -164,15 +173,27 @@ class Level_1(Level):
             [210, 32, 200, 400],
             [210, 32, 600, 300],
         ]
-        fires = [60, 60, 600, 500]
+        fires = [[60, 60, 700, 250]]
 
         # Перебираем массив и добавляем каждую платформу в группу спрайтов - platform_list
+
         for platform in level:
             block = Platform(platform[0], platform[1])
             block.rect.x = platform[2]
             block.rect.y = platform[3]
             block.player = self.player
             self.platform_list.add(block)
+
+        for fire in fires:
+            block = Fire(fire[0], fire[1])
+            block.rect.x = fire[2]
+            block.rect.y = fire[3]
+            block.player = self.player
+            self.fire.add(block)
+
+
+
+
 
 
 # Основная функция программы
@@ -225,6 +246,9 @@ def main():
                     player.stop()
                 if event.key == pygame.K_RIGHT and player.change_x > 0:
                     player.stop()
+
+
+
 
         active_sprite_list.update()
 
