@@ -1,3 +1,5 @@
 main.py - основной файл игры
 constans.py - файл с постоянными величинами
-background.jpg, idle.png, platform.png, bg.jpg - папка data
+heroes.py - в этом файле находятся классы с описанием всех спрайтов(персонажей и тайлов)
+requirements.txt - библиотеки
+music и data - папки с музыкой, изображениями и уровнями
