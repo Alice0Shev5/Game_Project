@@ -1,5 +1,25 @@
+import os
+
 import pygame
 import sys
+
+pygame.init()
+# все для музыки
+pygame.mixer.music.load("music/msc2.mp3")
+pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(0.09)
+stop_music = True
+
+
+def music():
+    global stop_music
+    if stop_music:
+        stop_music = False
+        pygame.mixer.music.pause()
+    else:
+        stop_music = True
+        pygame.mixer.music.unpause()
+
 
 size = width, height = (550, 550)
 screen = pygame.display.set_mode(size)
@@ -11,6 +31,24 @@ player_group = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 fire_group = pygame.sprite.Group()
 trap_group = pygame.sprite.Group()
+star_group = pygame.sprite.Group()
+
+
+def load_image2(name, colorkey=None):  # на всякий пажарный, пусть будет
+    fullname = os.path.join('data', name)
+    # если файл не существует, то выходим
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
 
 
 def load_image(name):
@@ -92,9 +130,6 @@ def level_2():
                 player.move_left()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
                 player.move_right()
-
-
-
             if event.type == pygame.QUIT:
                 terminate()
 
@@ -173,32 +208,40 @@ def level_3():
 
 
 def start_screen():
-    text = ["ЗАСТАВКА",
-            "",
-            "Правила игры",
-            "Для выбора уровня - ",
-            "нажмите 1 или 2"]
-
     background = load_image('background.jpg')
     screen.blit(background, (0, 0))
 
     pygame.font.init()
     font = pygame.font.Font(None, 40)
-    text_coord = 50
-
-    for line in text:
-        string = font.render(line, 1, pygame.Color('black'))
-        string_rect = string.get_rect()
-        text_coord = text_coord + 10
-        string_rect.top = text_coord
-        string_rect.x = 200
-        text_coord = text_coord + string_rect.height
-        screen.blit(string, string_rect)
+    # Надписи и эллипсы
+    text = {'Map': [130, 190, 250, 200], 'Help': [130, 270, 250, 280],
+            'Music': [130, 350, 240, 360], 'Exit': [130, 430, 255, 440]}
+    for key, zn in text.items():
+        if key == 'Exit':
+            pygame.draw.ellipse(screen, (60, 50, 230), (130, 430, 300, 50))
+        else:
+            pygame.draw.ellipse(screen, (100, 100, 230), (zn[0], zn[1], 300, 50))
+        string = font.render(key, 1, (255, 255, 255))
+        screen.blit(string, (zn[2], zn[3]))
+    string = pygame.font.Font(None, 60).render('M a g i c a i n', 1, (0, 0, 139))
+    screen.blit(string, (150, 100))
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if 130 <= x <= 430 and 190 <= y <= 240:  # переход к карте с уровнями
+                    map()
+                elif 130 <= x <= 430 and 270 <= y <= 320:  # переход к Обучению
+                    pass
+                elif 130 <= x <= 430 and 350 <= y <= 400:  # переход к настройкам
+                    music()
+                elif 130 <= x <= 430 and 430 <= y <= 510:
+                    pygame.quit()
+                    sys.exit()
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
@@ -211,6 +254,45 @@ def start_screen():
                     level_3()
 
                 if event.key == pygame.K_3:
+                    level_3()
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def map():
+    background = load_image('back2.jpg')
+    star = load_image2('sky.PNG', -1)
+
+    screen.blit(background, (0, 0))
+    pygame.font.init()
+    font = pygame.font.Font(None, 60)
+    for i in range(3):
+        screen.blit(star, (150 * i, 170 * i))
+        koor = [(100, 70), (250, 240), (405, 410)]
+        string = font.render(str(i + 1), 1, (255, 255, 255))
+        screen.blit(string, koor[i])
+
+    pygame.draw.polygon(screen, pygame.Color('RoyalBlue'),
+                        ((20, 510), (60, 480), (170, 480), (170, 540), (60, 540)))
+    string = pygame.font.Font(None, 40).render('Back', 1, pygame.Color('LightSkyBlue'))
+    screen.blit(string, (70, 495))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if 20 <= x <= 170 and 480 <= y <= 540:
+                    start_screen()
+                elif 0 <= x <= 220 and 20 <= y <= 135:
+                    level_1()
+                    level_2()
+                elif 150 <= x <= 370 and 200 <= y <= 300:
+                    level_2()
+                    level_3()
+                elif 300 <= x <= 525 and 350 <= y <= 490:
                     level_3()
 
         pygame.display.flip()
@@ -328,6 +410,15 @@ class Trap(pygame.sprite.Sprite):
         self.rect = self.rect.move(50 * pos_x, 50 * pos_y)
 
         self.add(trap_group, all_sprites)
+
+
+class Star(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__()
+        self.image = load_image2('star.jpg', -1)
+        self.rect = self.image.get_rect()
+
+        self.add(star_group)
 
 
 start_screen()
