@@ -10,6 +10,7 @@ all_sprites = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 fire_group = pygame.sprite.Group()
+trap_group = pygame.sprite.Group()
 
 
 def load_image(name):
@@ -32,7 +33,7 @@ def terminate():
 
 
 def level_1():
-    player, level_x, level_y, fire = generate_level(load_level("level_1.txt"))
+    player, level_x, level_y, fire, trap = generate_level(load_level("level_1.txt"))
 
     running = True
     while running:
@@ -55,25 +56,78 @@ def level_1():
             if player.rect.left < 0:
                 player.rect.left = 0
 
+            if pygame.sprite.collide_rect(player, trap):
+                final_screen()
+
             if not pygame.sprite.collide_rect(player, fire):
                 screen.fill(pygame.Color(0, 0, 0))
                 tiles_group.draw(screen)
                 player_group.draw(screen)
                 fire_group.draw(screen)
+                trap_group.draw(screen)
             else:
                 all_sprites.empty()
                 player_group.empty()
                 tiles_group.empty()
                 fire_group.empty()
+                trap_group.empty()
+
                 return
 
         pygame.display.flip()
         clock.tick(FPS)
 
 
-
 def level_2():
-    player, level_x, level_y, fire = generate_level(load_level("level_2.txt"))
+    player, level_x, level_y, fire, trap = generate_level(load_level("level_2.txt"))
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+                player.move_up()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+                player.move_down()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+                player.move_left()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+                player.move_right()
+
+
+
+            if event.type == pygame.QUIT:
+                terminate()
+
+        if player.rect.right > 550:
+            player.rect.right = 550
+
+        if player.rect.left < 0:
+            player.rect.left = 0
+
+        for el in trap_group:
+            if pygame.sprite.collide_rect(player, el):
+                final_screen()
+
+        if not pygame.sprite.collide_rect(player, fire):
+            screen.fill(pygame.Color(0, 0, 0))
+            tiles_group.draw(screen)
+            player_group.draw(screen)
+            fire_group.draw(screen)
+            trap_group.draw(screen)
+        else:
+            all_sprites.empty()
+            player_group.empty()
+            tiles_group.empty()
+            fire_group.empty()
+            trap_group.empty()
+            return
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def level_3():
+    player, level_x, level_y, fire, trap = generate_level(load_level("level_3.txt"))
 
     running = True
     while running:
@@ -96,16 +150,22 @@ def level_2():
         if player.rect.left < 0:
             player.rect.left = 0
 
+        for el in trap_group:
+            if pygame.sprite.collide_rect(player, el):
+                final_screen()
+
         if not pygame.sprite.collide_rect(player, fire):
             screen.fill(pygame.Color(0, 0, 0))
             tiles_group.draw(screen)
             player_group.draw(screen)
             fire_group.draw(screen)
+            trap_group.draw(screen)
         else:
             all_sprites.empty()
             player_group.empty()
             tiles_group.empty()
             fire_group.empty()
+            trap_group.empty()
             final_screen()
 
         pygame.display.flip()
@@ -113,14 +173,11 @@ def level_2():
 
 
 def start_screen():
-
     text = ["ЗАСТАВКА",
             "",
             "Правила игры",
             "Для выбора уровня - ",
             "нажмите 1 или 2"]
-
-
 
     background = load_image('background.jpg')
     screen.blit(background, (0, 0))
@@ -128,7 +185,6 @@ def start_screen():
     pygame.font.init()
     font = pygame.font.Font(None, 40)
     text_coord = 50
-
 
     for line in text:
         string = font.render(line, 1, pygame.Color('black'))
@@ -148,22 +204,24 @@ def start_screen():
                 if event.key == pygame.K_1:
                     level_1()
                     level_2()
+                    level_3()
 
                 if event.key == pygame.K_2:
                     level_2()
+                    level_3()
+
+                if event.key == pygame.K_3:
+                    level_3()
 
         pygame.display.flip()
         clock.tick(FPS)
 
 
 def final_screen():
-    text = ["ЗАСТАВКА",
-            "",
-            "КОНЕЦ",
-            " ",
-            ""]
-
-
+    text = ['ИГРА ОКОНЧЕНА',
+            '',
+            'Количество пройденных уровней:',
+            '']
 
     background = load_image('background.jpg')
     screen.blit(background, (0, 0))
@@ -171,7 +229,6 @@ def final_screen():
     pygame.font.init()
     font = pygame.font.Font(None, 40)
     text_coord = 50
-
 
     for line in text:
         string = font.render(line, 1, pygame.Color('white'))
@@ -202,6 +259,7 @@ def load_level(name):
 
 
 def generate_level(level_map):
+    global trap
     new_player, x, y = None, None, None
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
@@ -212,11 +270,13 @@ def generate_level(level_map):
             elif level_map[y][x] == '@':
                 Tile('wall.png', x, y)
                 new_player = Player(x, y)
-            # цветок будет обозначен на карте уровня знаком "&"
             elif level_map[y][x] == '&':
                 Tile('wall.png', x, y)
                 fire = Fire(x, y)
-    return new_player, x, y, fire
+            elif level_map[y][x] == '*':
+                Tile('wall.png', x, y)
+                trap = Trap(x, y)
+    return new_player, x, y, fire, trap
 
 
 class Tile(pygame.sprite.Sprite):
@@ -260,7 +320,16 @@ class Fire(pygame.sprite.Sprite):
         self.add(fire_group, all_sprites)
 
 
-start_screen()
+class Trap(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__()
+        self.image = load_image('trap.png')
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(50 * pos_x, 50 * pos_y)
 
+        self.add(trap_group, all_sprites)
+
+
+start_screen()
 
 terminate()
